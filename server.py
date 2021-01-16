@@ -11,18 +11,39 @@ import validators
 
 class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        path = self.path
-        print(path)
-        if path.startswith('/image-comparison', 0, 17):
-            api = ImageComparisonAPI()
-            parsed = urlparse.urlparse(path)
-            img_a_path = parse_qs(parsed.query)['img_a'][0]
-            img_b_path = parse_qs(parsed.query)['img_b'][0]
-            percent = api.get_percent(img_a_path, img_b_path)
-            self.path = 'otherPage.html'
-            # self.send_response(200)
+        # token = parse_qs(parsed.query)['token'][0]
+        # if token != 'kmrhn74zgzcq4nqb':
+        #     response = {
+        #         'success': False,
+        #         'error': 'Authetication failed.'
+        #     }
+        #     self.wfile.write(bytes(json.dumps(response), 'utf-8'))
+        # if self.headers.get('Authorization') == None:
+        #     self.do_AUTHHEAD()
+        #     response = {
+        #         'success': False,
+        #         'error': 'Authetication failed.'
+        #     }
+        #     self.wfile.write(bytes(json.dumps(response), 'utf-8'))
+
+        # elif self.path.startswith('/image-comparison', 0, 17):
+        #     parsed = urlparse.urlparse(self.path)
+        #     api = ImageComparisonAPI()
+        #     img_a_path = parse_qs(parsed.query)['img_a'][0]
+        #     img_b_path = parse_qs(parsed.query)['img_b'][0]
+        #     percent = api.get_percent(img_a_path, img_b_path)
+        #     self.path = 'otherPage.html'
+        #     self.send_header('Content-type','text/html')
+        #     self.send_response(200)
+        #     self.end_headers()
+        #     self.wfile.write(b'<!DOCTYPE html>\n<meta charset=utf-8 />\n<title>Notification page</title>\n')
+            # response = {
+            #     'success': True,
+            #     'percent': str(percent)
+            # }
+            # self.wfile.write(bytes(json.dumps(response), 'utf-8'))
             # self.end_headers()
-            # self.wfile.write(b'percent: ' + percent)
+            # self.wfile.write(b'percent: ' + bytes(str(percent), 'utf-8'))
             # self.wfile.write(b'%.2f\r\n' % percent)
             # self.wfile.write(json.dumps({
                 # 'percent': b'%.2f\r\n' % percent
@@ -32,11 +53,35 @@ class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
             #     'data':'hello from server'
             # }
             # self.wfile.write(json.dumps(response))
-        print(percent)
-        return http.server.SimpleHTTPRequestHandler.do_GET(self)
+            #print(percent)
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.wfile.write(b'<!DOCTYPE html>\n<meta charset=utf-8 />\n<title>Notification page</title>\n')
+        self.wfile.write(b'<style>body {max-width:400px; background:#fff8ea;}</style>\n')
+        self.wfile.write(b'\n<p>\nSehr geehrte Damen und Herren,<br />\n<br />\naufgrund eines technischen Problems ist die Seite derzeit offline. Wir arbeiten bereits an einer L&ouml;sung und werden wohl bereits morgen wieder wie gewohnt erreichbar sein. <br />\n<br />\nVielen Dank f&uuml;r Ihr Verst&auml;ndnis,<br />\nDas Team\n</p>\n\n')
+        #self.wfile.write('<!-- '+datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+' // '+self.path+'-->\n')
+            
+
+        return
+        # return http.server.SimpleHTTPRequestHandler.do_GET(self)
+
+    def do_HEAD(self):
+        print ("send header")
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+
+    def do_AUTHHEAD(self):
+        print ("send header")
+        self.send_response(401)
+        self.send_header('WWW-Authenticate', 'Basic realm=\"Test\"')
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+    
 
 class ImageComparisonAPI:
     def get_percent(self, img_a_path, img_b_path):
+        # passing as url or local file
         img_a = Image.open(urlopen(img_a_path)) if validators.url(img_a_path) else Image.open(img_a_path)
         img_b = Image.open(urlopen(img_b_path)) if validators.url(img_b_path) else Image.open(img_b_path)
         # different file type handler
