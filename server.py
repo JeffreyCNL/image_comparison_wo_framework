@@ -11,50 +11,44 @@ import validators
 
 class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        # token = parse_qs(parsed.query)['token'][0]
-        # if token != 'kmrhn74zgzcq4nqb':
-        #     response = {
-        #         'success': False,
-        #         'error': 'Authetication failed.'
-        #     }
-        #     self.wfile.write(bytes(json.dumps(response), 'utf-8'))
-        # if self.headers.get('Authorization') == None:
-        #     self.do_AUTHHEAD()
-        #     response = {
-        #         'success': False,
-        #         'error': 'Authetication failed.'
-        #     }
-        #     self.wfile.write(bytes(json.dumps(response), 'utf-8'))
-
-        if self.path.startswith('/image-comparison', 0, 17):
-            parsed = urlparse.urlparse(self.path)
-            api = ImageComparisonAPI()
-            img_a_path = parse_qs(parsed.query)['img_a'][0]
-            img_b_path = parse_qs(parsed.query)['img_b'][0]
-            percent = api.get_percent(img_a_path, img_b_path)
+        parsed = urlparse.urlparse(self.path)
+        token = parse_qs(parsed.query)['token'][0] if 'token' in parse_qs(parsed.query) else None
+        # no token provided
+        if token == None:
             response = {
-                'success': True,
-                'percent': str(percent)
+                'success': False,
+                'error': 'Authetication failed.'
             }
-            self.send_response(200)
+            self.send_response(401)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            self.wfile.write(self._html(response))            
+            self.wfile.write(self._html(response))
+        # valid token
+        elif token == TOKEN:
+            if self.path.startswith('/image-comparison', 0, 17):
+                api = ImageComparisonAPI()
+                img_a_path = parse_qs(parsed.query)['img_a'][0]
+                img_b_path = parse_qs(parsed.query)['img_b'][0]
+                percent = api.get_percent(img_a_path, img_b_path)
+                response = {
+                    'success': True,
+                    'percent': str(percent) + '%'
+                }
+                self.send_response(200)
+                self.send_header("Content-type", "text/html")
+                self.end_headers()
+                self.wfile.write(self._html(response))       
+        # invalid token
+        else:
+            response = {
+                'success': False,
+                'error': 'Invalid credentials'
+            }
+            self.send_response(403)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+            self.wfile.write(self._html(response)) 
         return
-        # return http.server.SimpleHTTPRequestHandler.do_GET(self)
-
-    def do_HEAD(self):
-        print ("send header")
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
-
-    def do_AUTHHEAD(self):
-        print ("send header")
-        self.send_response(401)
-        self.send_header('WWW-Authenticate', 'Basic realm=\"Test\"')
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
     
     def _html(self, message):
         """This just generates an HTML document that includes message
@@ -62,8 +56,6 @@ class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
         """
         content = f"<html><body><h1>{message}</h1></body></html>"
         return content.encode("utf8")
-
-    
 
 class ImageComparisonAPI:
     def get_percent(self, img_a_path, img_b_path):
@@ -77,10 +69,10 @@ class ImageComparisonAPI:
         # different size handler
         if img_a.size != img_b.size:
             img_a = img_a.resize((img_b.width, img_b.height))
-        return imgcompare.image_diff_percent(img_a, img_b)
-
+        return 100.0 - imgcompare.image_diff_percent(img_a, img_b)
 
 PORT = 5000
 handler = ImageComparisonHandler
+TOKEN = 'kmrhn74zgzcq4nqb'
 my_server = socketserver.TCPServer(("", PORT), handler)
 my_server.serve_forever()
