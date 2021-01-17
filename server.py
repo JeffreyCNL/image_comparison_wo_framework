@@ -19,9 +19,7 @@ class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
                 'success': False,
                 'error': 'Authetication failed.'
             }
-            self.send_response(401)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
+            self._set_headers(401)
             self.wfile.write(self._html(response))
         # valid token
         elif token == TOKEN:
@@ -34,9 +32,7 @@ class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
                     'success': True,
                     'percent': str(percent) + '%'
                 }
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
+                self._set_headers(200)
                 self.wfile.write(self._html(response))       
         # invalid token
         else:
@@ -44,12 +40,15 @@ class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
                 'success': False,
                 'error': 'Invalid credentials'
             }
-            self.send_response(403)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
+            self._set_headers(403)
             self.wfile.write(self._html(response)) 
         return
     
+    def _set_headers(self, code):
+        self.send_response(code)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+
     def _html(self, message):
         """This just generates an HTML document that includes message
         in the body. Override, or re-write this do do more interesting stuff.
