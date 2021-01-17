@@ -11,6 +11,9 @@ import validators
 
 class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
+        """
+            This function connect with the server with token and path verification.
+        """
         parsed = urlparse.urlparse(self.path)
         token = parse_qs(parsed.query)['token'][0] if 'token' in parse_qs(parsed.query) else None
         # no token provided
@@ -72,6 +75,9 @@ class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
         return content.encode("utf8")
 
 class ImageComparisonAPI:
+    """
+        Class generate ImageComparison API using imgcompare library
+    """
     def get_percent(self, img_a_path, img_b_path):
         # passing as url or local file
         img_a = Image.open(urlopen(img_a_path)) if validators.url(img_a_path) else Image.open(img_a_path)
@@ -84,7 +90,6 @@ class ImageComparisonAPI:
         if img_a.size != img_b.size:
             img_a = img_a.resize((img_b.width, img_b.height))
         return 100.0 - imgcompare.image_diff_percent(img_a, img_b)
-
 
 PORT = 5000
 handler = ImageComparisonHandler
