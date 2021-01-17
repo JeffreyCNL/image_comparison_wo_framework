@@ -26,42 +26,20 @@ class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
         #     }
         #     self.wfile.write(bytes(json.dumps(response), 'utf-8'))
 
-        # elif self.path.startswith('/image-comparison', 0, 17):
-        #     parsed = urlparse.urlparse(self.path)
-        #     api = ImageComparisonAPI()
-        #     img_a_path = parse_qs(parsed.query)['img_a'][0]
-        #     img_b_path = parse_qs(parsed.query)['img_b'][0]
-        #     percent = api.get_percent(img_a_path, img_b_path)
-        #     self.path = 'otherPage.html'
-        #     self.send_header('Content-type','text/html')
-        #     self.send_response(200)
-        #     self.end_headers()
-        #     self.wfile.write(b'<!DOCTYPE html>\n<meta charset=utf-8 />\n<title>Notification page</title>\n')
-            # response = {
-            #     'success': True,
-            #     'percent': str(percent)
-            # }
-            # self.wfile.write(bytes(json.dumps(response), 'utf-8'))
-            # self.end_headers()
-            # self.wfile.write(b'percent: ' + bytes(str(percent), 'utf-8'))
-            # self.wfile.write(b'%.2f\r\n' % percent)
-            # self.wfile.write(json.dumps({
-                # 'percent': b'%.2f\r\n' % percent
-            # }))
-            # response = {
-            #     'status':'SUCCESS',
-            #     'data':'hello from server'
-            # }
-            # self.wfile.write(json.dumps(response))
-            #print(percent)
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.wfile.write(b'<!DOCTYPE html>\n<meta charset=utf-8 />\n<title>Notification page</title>\n')
-        self.wfile.write(b'<style>body {max-width:400px; background:#fff8ea;}</style>\n')
-        self.wfile.write(b'\n<p>\nSehr geehrte Damen und Herren,<br />\n<br />\naufgrund eines technischen Problems ist die Seite derzeit offline. Wir arbeiten bereits an einer L&ouml;sung und werden wohl bereits morgen wieder wie gewohnt erreichbar sein. <br />\n<br />\nVielen Dank f&uuml;r Ihr Verst&auml;ndnis,<br />\nDas Team\n</p>\n\n')
-        #self.wfile.write('<!-- '+datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+' // '+self.path+'-->\n')
-            
-
+        if self.path.startswith('/image-comparison', 0, 17):
+            parsed = urlparse.urlparse(self.path)
+            api = ImageComparisonAPI()
+            img_a_path = parse_qs(parsed.query)['img_a'][0]
+            img_b_path = parse_qs(parsed.query)['img_b'][0]
+            percent = api.get_percent(img_a_path, img_b_path)
+            response = {
+                'success': True,
+                'percent': str(percent)
+            }
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+            self.wfile.write(self._html(response))            
         return
         # return http.server.SimpleHTTPRequestHandler.do_GET(self)
 
@@ -77,6 +55,14 @@ class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('WWW-Authenticate', 'Basic realm=\"Test\"')
         self.send_header('Content-type', 'text/html')
         self.end_headers()
+    
+    def _html(self, message):
+        """This just generates an HTML document that includes message
+        in the body. Override, or re-write this do do more interesting stuff.
+        """
+        content = f"<html><body><h1>{message}</h1></body></html>"
+        return content.encode("utf8")
+
     
 
 class ImageComparisonAPI:
