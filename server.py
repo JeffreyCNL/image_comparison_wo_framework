@@ -17,28 +17,39 @@ class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
         if token == None:
             response = {
                 'success': False,
-                'error': 'Authetication failed.'
+                'error': 401,
+                'message': 'Authetication failed.'
             }
             self._set_headers(401)
             self.wfile.write(self._html(response))
         # valid token
         elif token == TOKEN:
             if self.path.startswith('/image-comparison', 0, 17):
-                api = ImageComparisonAPI()
-                img_a_path = parse_qs(parsed.query)['img_a'][0]
-                img_b_path = parse_qs(parsed.query)['img_b'][0]
-                percent = api.get_percent(img_a_path, img_b_path)
-                response = {
-                    'success': True,
-                    'percent': str(percent) + '%'
-                }
-                self._set_headers(200)
-                self.wfile.write(self._html(response))       
+                try:
+                    api = ImageComparisonAPI()
+                    img_a_path = parse_qs(parsed.query)['img_a'][0]
+                    img_b_path = parse_qs(parsed.query)['img_b'][0]
+                    percent = api.get_percent(img_a_path, img_b_path)
+                    response = {
+                        'success': True,
+                        'percent': str(percent) + '%'
+                    }
+                    self._set_headers(200)
+                    self.wfile.write(self._html(response)) 
+                except:
+                    response = {
+                        'success': False,
+                        'error': 404,
+                        'message' : 'resource not found'
+                    }
+                    self._set_headers(404)
+                    self.wfile.write(self._html(response))
         # invalid token
         else:
             response = {
                 'success': False,
-                'error': 'Invalid credentials'
+                'error': 403,
+                'message': 'Invalid credentials'
             }
             self._set_headers(403)
             self.wfile.write(self._html(response)) 
@@ -50,10 +61,14 @@ class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def _html(self, message):
-        """This just generates an HTML document that includes message
-        in the body. Override, or re-write this do do more interesting stuff.
         """
-        content = f"<html><body><h1>{message}</h1></body></html>"
+            This just generates an HTML document that includes message
+            in the body. Override, or re-write this do do more interesting stuff.
+        """
+        content = f"<html><body>"
+        for key in message:
+            content += f"<li> {key} : {message[key]} </li>"
+        content += f"</body></html>"
         return content.encode("utf8")
 
 class ImageComparisonAPI:
@@ -69,6 +84,7 @@ class ImageComparisonAPI:
         if img_a.size != img_b.size:
             img_a = img_a.resize((img_b.width, img_b.height))
         return 100.0 - imgcompare.image_diff_percent(img_a, img_b)
+
 
 PORT = 5000
 handler = ImageComparisonHandler
