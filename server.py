@@ -8,6 +8,7 @@ from urllib.request import urlopen
 import imgcompare
 import validators
 from PIL import Image
+from config import server_token
 
 class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -15,10 +16,10 @@ class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
             Connects the server with the given token and path verification.
         """
         parsed = urlparse.urlparse(self.path)
-        token = parse_qs(parsed.query)['token'][0] if 'token' in parse_qs(
+        client_token = parse_qs(parsed.query)['token'][0] if 'token' in parse_qs(
             parsed.query) else None
         # no token provided
-        if token == None:
+        if client_token == None:
             response = {
                 'success': False,
                 'error': 401,
@@ -27,7 +28,7 @@ class ImageComparisonHandler(http.server.SimpleHTTPRequestHandler):
             self._set_headers(401)
             self.wfile.write(self._html(response))
         # valid token
-        elif token == TOKEN:
+        elif client_token == server_token:
             if self.path.startswith('/image-comparison', 0, 17):
                 try:
                     api = ImageComparisonAPI()
@@ -95,7 +96,5 @@ class ImageComparisonAPI:
 
 if __name__ == "__main__":    
     PORT = 5000
-    handler = ImageComparisonHandler
-    TOKEN = 'kmrhn74zgzcq4nqb'
-    my_server = socketserver.TCPServer(("", PORT), handler)
+    my_server = socketserver.TCPServer(("", PORT), ImageComparisonHandler)
     my_server.serve_forever()
