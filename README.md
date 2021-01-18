@@ -76,5 +76,16 @@ error : 403
 message : Invalid credentials
 ```
 
+## Test
+By running the server in the terminal we will be able to run the unit test.
+Run the server by
+```bash
+python3 server.py
+```
+Run the test by
+```bash
+python3 test.py
+```
+
 ## Authors
 Chia-Ning (Jeffrey) Lee is in charged of backend Web Api.
